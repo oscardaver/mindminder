@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+include_once 'controllers/usuario.controller.php';
+$ControladorUser= new Usuario_controller();
+
+$EntiUsuarios = $ControladorUser->mostrarEntidad(); // Llama a tu función
+
 ?>
 
 
@@ -14,7 +20,7 @@ session_start();
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Trastornos</title>
+    <title>Registro de usuario</title>
 
     <!-- Custom fonts for this template-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -26,7 +32,6 @@ session_start();
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
-    
 </head>
 
 <body id="page-top">
@@ -227,77 +232,85 @@ session_start();
                     <!-- Page Heading -->
                 
                     <!-- Botón para abrir el modal -->
-                    <button class="btn btn-primary" id="abrirModal" data-bs-toggle="modal" data-bs-target="#modalTrastorno">
-                        Agregar Trastorno
+                    <button class="btn btn-primary" id="abrirModal" data-bs-toggle="modal" data-bs-target="#modalUser">
+                        Registrar Usuarios
                         </button>
+
+
                     <!-- Modal de registro de trastorno -->
-                    <div class="modal fade" id="modalTrastorno" tabindex="-1" aria-labelledby="modalTrastornoLabel" aria-hidden="true">
+                    <div class="modal fade" id="modalUser" tabindex="-1" aria-labelledby="modalUserLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content shadow-lg rounded-4">
                         <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="modalTrastornoLabel"><i class="fa-solid fa-brain me-2"></i> Registrar Trastorno</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">x</button>
+                            <h5 class="modal-title" id="modalTrastornoLabel"><i class="fa-solid fa-brain me-2"></i> Registrar Usuarios</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                             <div class="modal-body">
                             <div class="mb-3">
-                                <label for="nombreTrastorno" class="form-label">Nombre del Trastorno</label>
-                                <input type="text" class="form-control" id="nombreTrastorno" name="nombreTrastorno" required autocomplete="off">
+                                <label for="nombre" class="form-label">Nombre del Usuario</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required autocomplete="off">
                             </div>
                             <div class="mb-3">
-                                <label for="descripcionTrastorno" class="form-label">Descripción</label>
-                                <textarea class="form-control" id="descripcionTrastorno" name="descripcionTrastorno" rows="3" required></textarea>
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required autocomplete="off">
                             </div>
+                            <div class="md-3">
+                                <label class="form-label">Rol</label>
+                                <select name="rolUser" id="rolUser" class="form-select">
+                                    <option value="">--</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Psicologo">Psicologo</option>
+                                </select>
+                            </div>
+                             <div class="md-3">
+                                <label class="form-label">Entidad Relacionar</label>
+                                <select name="EntidadUser" id="EntidadUser" class="form-select">
+                                    <option value="">--</option>
+
+                                    <?php
+                                
+
+                                    foreach ($EntiUsuarios as $EntiUsuario) {
+                                        $selected = '';
+                                        if (isset($_POST['EntidadUser']) && $_POST['EntidadUser'] == $EntiUsuario['codigoEntidad']) {
+                                            $selected = 'selected';
+                                        }
+                                        echo '<option value="' . htmlspecialchars($EntiUsuario['codigoEntidad'], ENT_QUOTES, 'UTF-8') . '" ' . $selected . '>'
+                                            . htmlspecialchars($EntiUsuario['razonSocial'], ENT_QUOTES, 'UTF-8') . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+
                             </div>
                             <div class="modal-footer">
-                            <button type="button" class="btn btn-success" id="registrarTrast"><i class="fa-solid fa-check me-1"></i>Guardar</button>
+                            <button type="button" class="btn btn-success" id="registrarUser"><i class="fa-solid fa-check me-1"></i>Guardar</button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             </div>
                         </div>
                     </div>
                     </div>
-                    <!-- Modal de Edición -->
-                <div id="modalEditar" class="modal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Trastorno</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="editarId">
-                        <div class="mb-3">
-                        <label for="editarNombre" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="editarNombre">
-                        </div>
-                        <div class="mb-3">
-                        <label for="editarDescripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="editarDescripcion"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" id="btnEditarTrastorno" class="btn btn-primary">Guardar cambios</button>
-                    </div>
-                    </div>
-                </div>
-                </div>
 
 
                    <div class="container mt-5">
                         <div class="card shadow rounded">
                             <div class="card-header bg-primary text-white">
-                                <h4 class="mb-0">Trastornos Mentales</h4>
+                                <h4 class="mb-0">Listado de Usuarios</h4>
                             </div>
                             <div class="card-body">
-                                <table id="tablaTrastornos" class="table table-striped table-bordered table-hover" style="width:100%">
+                                <table id="tablaUsuarios" class="table table-striped table-bordered table-hover" style="width:100%">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>#</th>
                                             <th>Nombre</th>
-                                            <th>Descripción</th>
-                                            <th>Acciones</th>
+                                            <th>Entidad</th>
+                                            <th>Username</th>
+                                            <th>Rol</th>
+                                            <th>Estado</th>
                                         </tr>
                                     </thead>
-                                    <tbody></tbody>
+                                    <tbody>
+                                        
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -362,14 +375,9 @@ session_start();
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
-    <script src="vendor/chart.js/Chart.min.js"></script>
-
+    
     <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
-    <!-- Page level custom scripts -->
-    <script src="js/trastorno.js"></script>
+    <script src="js/usuarios.js"></script>
 
 </body>
 

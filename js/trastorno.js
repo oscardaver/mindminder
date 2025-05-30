@@ -1,3 +1,7 @@
+
+$(document).ready(function() {
+    cargarTablaTrastornos();
+});
 // Abrir modal al hacer clic en el botón
 $('#abrirModal').on('click', function() {
     $('#modalTrastorno').modal('show');
@@ -67,6 +71,11 @@ $('#registrarTrast').on('click', function() {
 // Función para cargar la tabla de trastornos (ejemplo)
 
 function cargarTablaTrastornos() {
+    // Verifica si ya hay una tabla inicializada
+    if ($.fn.DataTable.isDataTable('#tablaTrastornos')) {
+        $('#tablaTrastornos').DataTable().clear().destroy();
+    }
+
     $('#tablaTrastornos').DataTable({
         ajax: {
             url: 'controllers/trastorno.controller.php',
@@ -74,7 +83,7 @@ function cargarTablaTrastornos() {
             data: { action: 'cargarTablaTrastornos' },
             dataSrc: 'data'
         },
-        columns: [
+    columns: [
             {
                 data: null,
                 render: function (data, type, row, meta) {
@@ -82,20 +91,75 @@ function cargarTablaTrastornos() {
                 }
             },
             { data: 'nombre' },
-            { data: 'descripcion' }
+            { data: 'descripcion' },
+            {
+                data: null,
+                render: function (data, type, row) {
+                    return `
+                        <button class="btn-editar" data-id="${row.codigoTrastorno}">✏️</button>
+                        <button class="btn-eliminar" data-id="${row.codigoTrastorno}">🗑️</button>
+                    `;
+                },
+                orderable: false,
+                searchable: false
+            }
         ],
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            decimal: "",
+            emptyTable: "No hay datos disponibles en la tabla",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+            infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+            infoFiltered: "(filtrado de _MAX_ entradas totales)",
+            lengthMenu: "Mostrar _MENU_ entradas",
+            loadingRecords: "Cargando...",
+            processing: "Procesando...",
+            search: "Buscar:",
+            zeroRecords: "No se encontraron registros coincidentes",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior"
+            }
         },
         responsive: true,
         pageLength: 10,
         lengthMenu: [5, 10, 20, 50]
     });
 }
+
+
 // Llamar a la función para cargar la tabla al cargar la página
-$(document).ready(function() {
-    cargarTablaTrastornos();
+$('#tablaTrastornos').on('click', '.btn-eliminar', function () {
+    const id = $(this).data('id');
+    eliminarTrastorno(id);
 });
+
+$('#tablaTrastornos').on('click', '.btn-editar', function () {
+    const id = $(this).data('id');
+
+    $.ajax({
+        url: 'controllers/trastorno.controller.php',
+        type: 'POST',
+        data: { action: 'obtenerTrastorno', id: id },
+        dataType: 'json',
+        success: function (respuesta) {
+            if (respuesta.success) {
+                const trastorno = respuesta.data;
+                $('#editarId').val(trastorno.codigoTrastorno);
+                $('#editarNombre').val(trastorno.nombre);
+                $('#editarDescripcion').val(trastorno.descripcion);
+                $('#modalEditar').modal('show');
+            } else {
+                Swal.fire('Error', 'No se pudo obtener el trastorno.', 'error');
+            }
+        },
+        error: function () {
+            Swal.fire('Error', 'Error en la petición AJAX.', 'error');
+        }
+    });
+});
+
 // Función para eliminar un trastorno
 function eliminarTrastorno(id) {
     Swal.fire({
@@ -138,76 +202,35 @@ function eliminarTrastorno(id) {
         }
     });
 }
-// Función para editar un trastorno         
-function editarTrastorno(id) {
-    $.ajax({
-        url: 'controllers/trastorno.controller.php',
-        type: 'POST',
-        data: {
-            action: 'obtenerTrastorno',
-            id: id
-        },
-        success: function(response) {
-            var data = JSON.parse(response);
-            $('#nombreTrastorno').val(data.nombre);
-            $('#descripcionTrastorno').val(data.descripcion);
-            $('#modalTrastorno').modal('show');
 
-            // Cambiar el botón de registrar a actualizar
-            $('#registrarTrast').off('click').on('click', function() {
-                actualizarTrastorno(id);
-            });
-        },
-        error: function(xhr, status, error) {
-            console.error(error);
-        }
-    });
-}
-// Función para actualizar un trastorno 
-
-function actualizarTrastorno(id) {
-    var nombreTrastorno = $('#nombreTrastorno').val().trim();
-    var descripcionTrastorno = $('#descripcionTrastorno').val().trim();
-
-    if (nombreTrastorno === "" || descripcionTrastorno === "") {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos incompletos',
-            text: 'Por favor completa todos los campos.',
-        });
-        return;
-    }
+// Función para editar un trastorno
+$('#btnEditarTrastorno').on('click', function () {
+    const editarId = $('#editarId').val();
+    const editarNombre = $('#editarNombre').val();
+    const editarDescripcion = $('#editarDescripcion').val();
 
     $.ajax({
         url: 'controllers/trastorno.controller.php',
         type: 'POST',
         data: {
-            action: 'actualizarTrastorno',
-            id: id,
-            nombreTrastorno: nombreTrastorno,
-            descripcionTrastorno: descripcionTrastorno
+            action: 'editarTrastorno',
+            editarId: editarId,
+            editarNombre: editarNombre,
+            editarDescripcion: editarDescripcion
         },
-        success: function(response) {
-            if (response === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Trastorno actualizado correctamente',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-
-                $('#modalTrastorno').modal('hide');
-                cargarTablaTrastornos();
+        dataType: 'json',
+        success: function (respuesta) {
+            if (respuesta.success) {
+                $('#modalEditar').modal('hide');
+                Swal.fire('Éxito', 'Trastorno actualizado correctamente.', 'success');
+                $('#tablaTrastornos').DataTable().ajax.reload();
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo actualizar el trastorno.',
-                });
+                Swal.fire('Error', 'No se pudo actualizar el trastorno.', 'error');
             }
         },
-        error: function(xhr, status, error) {
-            console.error(error);
+        error: function () {
+            Swal.fire('Error', 'Error en la petición AJAX.', 'error');
         }
     });
-}
+});
+

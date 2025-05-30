@@ -22,6 +22,47 @@ class Trastorno_controller{
         }
     }
 
+    public function eliminarTrastorno(){
+        $id = $_POST['id'] ?? '';
+        if (!empty($id)) {
+            $resultado = Trastorno_model::eliminarTrastorno($id);
+            echo $resultado ? 'success' : 'error';
+        } else {
+            echo 'error';
+        }
+    }
+
+    public function obtenerTrastornoEditar(){
+        $id = $_POST['id'] ?? '';
+       if (!empty($id)) {
+    $resultado = Trastorno_model::obtenerTrastornoEditar($id);
+        if ($resultado) {
+            echo json_encode(['success' => true, 'data' => $resultado]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Trastorno no encontrado']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'ID no proporcionado']);
+    }
+
+    }
+
+    public function editarTrastorno(){
+        $editarId = $_POST['editarId'] ?? '';
+        $editarNombre = $_POST['editarNombre'] ?? '';
+        $editarDescripcion = $_POST['editarDescripcion'] ?? '';
+
+        if (!empty($editarId) && !empty($editarNombre) && !empty($editarDescripcion)) {
+            $resultado = Trastorno_model::actualizarTrastorno($editarId, $editarNombre, $editarDescripcion);
+            if ($resultado) {
+            echo json_encode(['success' => true, 'data' => $resultado]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Trastorno no actualizado']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'ID no proporcionado']);
+    }
+    }
 
 
 
@@ -35,6 +76,18 @@ class Trastorno_controller{
             case 'cargarTablaTrastornos':
                 $this->obtenerTrastornos();
                 break;
+            case 'eliminarTrastorno':
+                $this->eliminarTrastorno();
+                break;
+            
+            case 'obtenerTrastorno':
+                $this->obtenerTrastornoEditar();
+                break;
+            
+            case 'editarTrastorno':
+                $this->editarTrastorno();
+                break;
+            
             default:
                 echo json_encode([
                     "status" => "error",
