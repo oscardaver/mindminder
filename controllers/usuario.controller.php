@@ -64,6 +64,7 @@ class Usuario_controller{
         $result = $entidad->obtenerEntidades();
         return $result;
     }
+    
     // Método para registrar un nuevo trastorno
     public function registrarUsuarios() {
     // Asegúrate de que estos POST estén llegando desde JS

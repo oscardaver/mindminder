@@ -1,10 +1,12 @@
 <?php
 session_start();
 
-include_once 'controllers/usuario.controller.php';
-$ControladorUser= new Usuario_controller();
+include_once 'controllers/reporteStudent.controller.php';
+$ControladorStudent= new reporteStudent_controller();
 
-$EntiUsuarios = $ControladorUser->mostrarEntidad(); // Llama a tu función
+$organizaciones = $ControladorStudent->mostrarOrganizacion();
+$suOrganizaciones = $ControladorStudent->mostrarSubOrganizacion();
+
 
 ?>
 
@@ -20,7 +22,7 @@ $EntiUsuarios = $ControladorUser->mostrarEntidad(); // Llama a tu función
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Registro de usuario</title>
+    <title>Reporte Estudiantes</title>
 
     <!-- Custom fonts for this template-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -32,6 +34,7 @@ $EntiUsuarios = $ControladorUser->mostrarEntidad(); // Llama a tu función
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
+    
 </head>
 
 <body id="page-top">
@@ -229,92 +232,108 @@ $EntiUsuarios = $ControladorUser->mostrarEntidad(); // Llama a tu función
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <!-- Page Heading -->
-                
-                    <!-- Botón para abrir el modal -->
-                    <button class="btn btn-primary" id="abrirModal" data-bs-toggle="modal" data-bs-target="#modalUser">
-                        Registrar Usuarios
+                <div class="container">
+                   <div class="card shadow-sm p-3 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="mb-0">Cargar Estudiantes</h2>
+                        <button id="btnDescargarPlantilla" class="btn btn-icon btn-outline-primary" data-bs-toggle="tooltip" title="Descargar plantilla CSV">
+                            <i class="fa-solid fa-download"></i>
                         </button>
+                    </div>
+
+                    <!-- Formulario para cargar CSV -->
+                    <div class="mb-3 d-flex align-items-center gap-2">
+                        <input class="form-control" type="file" id="csvFile" name="csvFile" accept=".csv" required>
+                        <button type="button" id="subirEstudiantesBtn" class="btn btn-primary">Subir</button>
+                    </div>
+                </div>
 
 
-                    <!-- Modal de registro de trastorno -->
-                    <div class="modal fade" id="modalUser" tabindex="-1" aria-labelledby="modalUserLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content shadow-lg rounded-4">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="modalTrastornoLabel"><i class="fa-solid fa-brain me-2"></i> Registrar Usuarios</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <!-- Caja de Filtros -->
+                <div class="card shadow-sm p-3 mb-4">
+                    <h5 class="mb-3">Filtros</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label>Fecha Inicio</label>
+                            <input type="date" id="fechaInicio" class="form-control"
+                                value="<?php echo isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d'); ?>">
                         </div>
-                            <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label">Nombre del Usuario</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required autocomplete="off">
-                            </div>
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="username" name="username" required autocomplete="off">
-                            </div>
-                            <div class="md-3">
-                                <label class="form-label">Rol</label>
-                                <select name="rolUser" id="rolUser" class="form-select">
-                                    <option value="">--</option>
-                                    <option value="Administrador">Administrador</option>
-                                    <option value="Psicologo">Psicologo</option>
-                                </select>
-                            </div>
-                             <div class="md-3">
-                                <label class="form-label">Entidad Relacionar</label>
-                                <select name="EntidadUser" id="EntidadUser" class="form-select">
-                                    <option value="">--</option>
-
-                                    <?php
-                                
-
-                                    foreach ($EntiUsuarios as $EntiUsuario) {
-                                        $selected = '';
-                                        if (isset($_POST['EntidadUser']) && $_POST['EntidadUser'] == $EntiUsuario['codigoEntidad']) {
-                                            $selected = 'selected';
-                                        }
-                                        echo '<option value="' . htmlspecialchars($EntiUsuario['codigoEntidad'], ENT_QUOTES, 'UTF-8') . '" ' . $selected . '>'
-                                            . htmlspecialchars($EntiUsuario['razonSocial'], ENT_QUOTES, 'UTF-8') . '</option>';
+                        <div class="col-md-3">
+                            <label>Fecha Fin</label>
+                            <input type="date" id="fechaFin" class="form-control"
+                                value="<?php echo isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d'); ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Carrera</label>
+                            <select id="filtroCarrera" name="filtroCarrera[]" class="form-select" multiple>
+                                <option value="">Todas</option>
+                                <?php
+                                foreach ($suOrganizaciones as $row) {
+                                    $selected = '';
+                                    if (isset($_POST['filtroCarrera']) && in_array($row['nombre'], $_POST['filtroCarrera'])) {
+                                        $selected = 'selected';
                                     }
-                                    ?>
-                                </select>
-                            </div>
-
-                            </div>
-                            <div class="modal-footer">
-                            <button type="button" class="btn btn-success" id="registrarUser"><i class="fa-solid fa-check me-1"></i>Guardar</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            </div>
+                                    echo '<option value="' . $row['nombre'] . '" ' . $selected . '>' . $row['nombre'] . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Organización</label>
+                            <select id="filtroOrganizacion" name="filtroOrganizacion[]" class="form-select" multiple>
+                                <option value="">Todas</option>
+                                <?php
+                                foreach ($organizaciones as $row) {
+                                    $selected = '';
+                                    if (isset($_POST['filtroOrganizacion']) && in_array($row['nombre'], $_POST['filtroOrganizacion'])) {
+                                        $selected = 'selected';
+                                    }
+                                    echo '<option value="' . $row['nombre'] . '" ' . $selected . '>' . $row['nombre'] . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Código</label>
+                            <input type="number" id="codigoEstudiante" class="form-control" placeholder="Ej: 20230123"
+                                value="<?php echo isset($_POST['codigoEstudiante']) ? htmlspecialchars($_POST['codigoEstudiante']) : '' ?>">
                         </div>
                     </div>
+
+                    <!-- Botón de búsqueda -->
+                    <div class="d-flex justify-content-end">
+                        <button id="buscarEstudiantesBtn" class="btn btn-primary">
+                            <i class="fa fa-search me-1"></i> Buscar
+                        </button>
                     </div>
+                </div>
 
-
-                   <div class="container mt-5">
+                    <div class="container mt-5">
                         <div class="card shadow rounded">
                             <div class="card-header bg-primary text-white">
-                                <h4 class="mb-0">Listado de Usuarios</h4>
+                                <h4 class="mb-0">Reporte Estudiante</h4>
                             </div>
                             <div class="card-body">
-                                <table id="tablaUsuarios" class="table table-striped table-bordered table-hover" style="width:100%">
-                                    <thead class="table-light">
+                                <!-- Tabla de estudiantes -->
+                                <table id="tablaEstudiantes" class="display table table-bordered" style="width:100%">
+                                    <thead>
                                         <tr>
+                                            <th>Fecha Registro</th>
+                                            <th>Código</th>
                                             <th>Nombre</th>
-                                            <th>Entidad</th>
-                                            <th>Username</th>
-                                            <th>Rol</th>
-                                            <th>Estado</th>
+                                            <th>Carrera</th>
+                                            <th>Organización</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+                                        <!-- Se llenará dinámicamente -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+          
+                </div>
                     </div>
                 </div>
                 <!-- /.container-fluid -->
@@ -375,9 +394,16 @@ $EntiUsuarios = $ControladorUser->mostrarEntidad(); // Llama a tu función
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 
-    
+    <!-- Page level plugins -->
+    <script src="vendor/chart.js/Chart.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
     <!-- Page level custom scripts -->
-    <script src="js/usuarios.js"></script>
+    <script src="js/demo/chart-area-demo.js"></script>
+    <script src="js/demo/chart-pie-demo.js"></script>
+    <!-- Page level custom scripts -->
+    <script src="js/reporteStudent.js"></script>
 
 </body>
 

@@ -87,7 +87,7 @@ session_start();
             
             <!-- Nav Item - Reporte Estudiante -->
             <li class="nav-item">
-                <a class="nav-link" href="EstudentR.php">
+                <a class="nav-link" href="reporteStudent.php">
                     <i class="fa-solid fa-person"></i>                   
                 <span>Reporte Estudiante</span></a>
             </li>
